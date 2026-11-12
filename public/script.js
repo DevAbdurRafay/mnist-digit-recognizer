@@ -7,7 +7,7 @@
   const W = canvas.width;
   const H = canvas.height;
 
-  let brushSize = 18;
+  let brushSize = 12;
   let isDrawing = false;
   let hasDrawn = false;
   let points = [];
@@ -249,7 +249,9 @@
     })
       .then((res) => {
         if (!res.ok) {
-          return res.json().then((data) => {
+          return res.json().catch(() => {
+            throw new Error(`Server error (HTTP ${res.status}). Check Vercel function logs.`);
+          }).then((data) => {
             throw new Error((data.detail && data.detail.error) || data.error || `HTTP ${res.status}`);
           });
         }

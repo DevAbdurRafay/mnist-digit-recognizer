@@ -153,4 +153,5 @@ def predict(req: PredictRequest):
     }
 
 PUBLIC_DIR = Path(__file__).parent.parent / "public"
-app.mount("/", StaticFiles(directory=PUBLIC_DIR, html=True), name="static")
+if PUBLIC_DIR.exists():
+    app.mount("/", StaticFiles(directory=PUBLIC_DIR, html=True), name="static")
