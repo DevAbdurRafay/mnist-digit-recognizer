@@ -3,8 +3,5 @@
     "api/index.py": {
       "includeFiles": "model/**"
     }
-  },
-  "rewrites": [
-    { "source": "/api/:path*", "destination": "/api/index" }
-  ]
+  }
 }

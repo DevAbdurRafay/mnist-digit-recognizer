@@ -142,15 +142,11 @@ def _predict_handler(req: PredictRequest):
     return {"predicted_digit": pred, "confidence": conf, "probabilities": prob_list}
 
 
-# /api/predict  → local dev (uvicorn)
-# /predict      → Vercel strips /api prefix before passing to function
+# /api/index   → Vercel file-based routing (api/index.py → /api/index)
+# /api/predict → local uvicorn dev
+@app.post("/api/index")
 @app.post("/api/predict")
-def predict_full(req: PredictRequest):
-    return _predict_handler(req)
-
-
-@app.post("/predict")
-def predict_short(req: PredictRequest):
+def predict(req: PredictRequest):
     return _predict_handler(req)
 
 

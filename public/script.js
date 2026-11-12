@@ -242,7 +242,7 @@
       maybeShowResult();
     });
 
-    fetch('/api/predict', {
+    fetch('/api/index', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ image: imageData }),
