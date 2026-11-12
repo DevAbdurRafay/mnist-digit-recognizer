@@ -119,39 +119,42 @@ class PredictRequest(BaseModel):
     image: str
 
 
-@app.post("/api/predict")
-def predict(req: PredictRequest):
+def _predict_handler(req: PredictRequest):
     try:
         x = preprocess(req.image)
     except ValueError as e:
         if "empty" in str(e):
-            raise HTTPException(
-                status_code=400, detail={"error": "Canvas is empty"}
-            )
+            raise HTTPException(status_code=400, detail={"error": "Canvas is empty"})
         raise HTTPException(status_code=400, detail={"error": str(e)})
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail={"error": f"Preprocessing failed: {str(e)}"}
-        )
+        raise HTTPException(status_code=500, detail={"error": f"Preprocessing failed: {str(e)}"})
 
     try:
         w = get_weights()
         probs = forward(x, w)
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail={"error": f"Inference failed: {str(e)}"}
-        )
+        raise HTTPException(status_code=500, detail={"error": f"Inference failed: {str(e)}"})
 
     pred = int(np.argmax(probs))
     conf = round(float(probs[pred]) * 100, 2)
     prob_list = [round(float(p) * 100, 2) for p in probs]
 
-    return {
-        "predicted_digit": pred,
-        "confidence": conf,
-        "probabilities": prob_list,
-    }
+    return {"predicted_digit": pred, "confidence": conf, "probabilities": prob_list}
 
 
+# /api/predict  → local dev (uvicorn)
+# /predict      → Vercel strips /api prefix before passing to function
+@app.post("/api/predict")
+def predict_full(req: PredictRequest):
+    return _predict_handler(req)
+
+
+@app.post("/predict")
+def predict_short(req: PredictRequest):
+    return _predict_handler(req)
+
+
+# Local dev only: serve public/ as static files
 PUBLIC_DIR = Path(__file__).parent.parent / "public"
-app.mount("/", StaticFiles(directory=PUBLIC_DIR, html=True), name="static")
+if PUBLIC_DIR.exists():
+    app.mount("/", StaticFiles(directory=PUBLIC_DIR, html=True), name="static")
