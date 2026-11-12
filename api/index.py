@@ -120,6 +120,7 @@ class PredictRequest(BaseModel):
 
 
 @app.post("/api/predict")
+@app.post("/predict")
 def predict(req: PredictRequest):
     try:
         x = preprocess(req.image)
