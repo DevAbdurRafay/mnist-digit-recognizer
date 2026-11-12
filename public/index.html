@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>MNIST Handwritten Digit Recognition</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="orbs" aria-hidden="true">
+    <div class="orb orb-cyan"></div>
+    <div class="orb orb-blue"></div>
+    <div class="orb orb-violet"></div>
+  </div>
+
+  <div class="container">
+    <header class="site-header">
+      <h1 class="site-title">MNIST Handwritten Digit Recognition</h1>
+    </header>
+
+    <main class="panels">
+      <section class="card panel-left">
+        <h2 class="card-title">Drawing Canvas</h2>
+
+        <div class="canvas-wrap">
+          <canvas id="drawCanvas" width="320" height="320" aria-label="Drawing canvas — draw a digit here"></canvas>
+        </div>
+
+        <div class="brush-row">
+          <span class="brush-label">Brush size</span>
+          <div class="brush-pills" role="group" aria-label="Brush size">
+            <button class="pill" data-size="10">Small</button>
+            <button class="pill active" data-size="18">Medium</button>
+            <button class="pill" data-size="26">Large</button>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button id="clearBtn" class="btn btn-glass">Clear</button>
+          <button id="predictBtn" class="btn btn-gradient" disabled>Proceed to Prediction</button>
+        </div>
+      </section>
+
+      <section class="card panel-right" id="rightPanel">
+        <div id="stateReady" class="panel-state">
+          <div class="ready-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="32" cy="32" r="30" stroke="url(#rg)" stroke-width="2"/>
+              <path d="M22 32 L29 39 L42 25" stroke="url(#rg)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              <defs>
+                <linearGradient id="rg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#06b6d4"/>
+                  <stop offset="1" stop-color="#3b82f6"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <h2 class="ready-title">Ready to Analyze</h2>
+          <p class="ready-sub">Draw a digit (0–9) and click<br><strong>Proceed to Prediction</strong></p>
+        </div>
+
+        <div id="stateAnalyzing" class="panel-state hidden">
+          <div class="loader-ring-wrap">
+            <svg class="loader-ring" viewBox="0 0 80 80" aria-hidden="true">
+              <circle cx="40" cy="40" r="34" stroke="rgba(255,255,255,0.08)" stroke-width="6" fill="none"/>
+              <circle class="ring-arc" cx="40" cy="40" r="34" stroke="url(#lg)" stroke-width="6" fill="none"
+                stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="160"/>
+              <defs>
+                <linearGradient id="lg" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#06b6d4"/>
+                  <stop offset="0.5" stop-color="#3b82f6"/>
+                  <stop offset="1" stop-color="#8b5cf6"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <div class="step-counter" id="stepCounter">Step 1 / 12</div>
+          </div>
+
+          <div class="progress-bar-wrap">
+            <div class="progress-bar" id="progressBar"></div>
+          </div>
+
+          <ol class="steps-list" id="stepsList">
+            <li class="step-item" data-step="1"><span class="step-icon"></span>Reading Canvas Image</li>
+            <li class="step-item" data-step="2"><span class="step-icon"></span>Converting to Grayscale</li>
+            <li class="step-item" data-step="3"><span class="step-icon"></span>Removing Noise</li>
+            <li class="step-item" data-step="4"><span class="step-icon"></span>Cropping the Digit</li>
+            <li class="step-item" data-step="5"><span class="step-icon"></span>Matching Stroke Thickness</li>
+            <li class="step-item" data-step="6"><span class="step-icon"></span>Resizing to 20×20</li>
+            <li class="step-item" data-step="7"><span class="step-icon"></span>Placing on 28×28 Canvas</li>
+            <li class="step-item" data-step="8"><span class="step-icon"></span>Centering by Center of Mass</li>
+            <li class="step-item" data-step="9"><span class="step-icon"></span>Normalizing Pixels (0 to 1)</li>
+            <li class="step-item" data-step="10"><span class="step-icon"></span>Flattening to 1D (784 values)</li>
+            <li class="step-item" data-step="11"><span class="step-icon"></span>Running Neural Network</li>
+            <li class="step-item" data-step="12"><span class="step-icon"></span>Applying Softmax</li>
+          </ol>
+        </div>
+
+        <div id="stateResult" class="panel-state hidden">
+          <div class="result-digit-wrap">
+            <div class="result-label">Predicted Digit</div>
+            <div class="result-digit" id="resultDigit">7</div>
+            <div class="confidence-badge" id="confidenceBadge">99.4% Confidence</div>
+          </div>
+          <h3 class="prob-title">Probability Progress</h3>
+          <ul class="prob-bars" id="probBars">
+            <li class="prob-row" data-digit="0">
+              <span class="prob-digit-label">0</span>
+              <div class="prob-bar-bg"><div class="prob-bar-fill"></div></div>
+              <span class="prob-pct">0.0%</span>
+            </li>
+            <li class="prob-row" data-digit="1">
+              <span class="prob-digit-label">1</span>
+              <div class="prob-bar-bg"><div class="prob-bar-fill"></div></div>
+              <span class="prob-pct">0.0%</span>
+            </li>
+            <li class="prob-row" data-digit="2">
+              <span class="prob-digit-label">2</span>
+              <div class="prob-bar-bg"><div class="prob-bar-fill"></div></div>
+              <span class="prob-pct">0.0%</span>
+            </li>
+            <li class="prob-row" data-digit="3">
+              <span class="prob-digit-label">3</span>
+              <div class="prob-bar-bg"><div class="prob-bar-fill"></div></div>
+              <span class="prob-pct">0.0%</span>
+            </li>
+            <li class="prob-row" data-digit="4">
+              <span class="prob-digit-label">4</span>
+              <div class="prob-bar-bg"><div class="prob-bar-fill"></div></div>
+              <span class="prob-pct">0.0%</span>
+            </li>
+            <li class="prob-row" data-digit="5">
+              <span class="prob-digit-label">5</span>
+              <div class="prob-bar-bg"><div class="prob-bar-fill"></div></div>
+              <span class="prob-pct">0.0%</span>
+            </li>
+            <li class="prob-row" data-digit="6">
+              <span class="prob-digit-label">6</span>
+              <div class="prob-bar-bg"><div class="prob-bar-fill"></div></div>
+              <span class="prob-pct">0.0%</span>
+            </li>
+            <li class="prob-row" data-digit="7">
+              <span class="prob-digit-label">7</span>
+              <div class="prob-bar-bg"><div class="prob-bar-fill"></div></div>
+              <span class="prob-pct">0.0%</span>
+            </li>
+            <li class="prob-row" data-digit="8">
+              <span class="prob-digit-label">8</span>
+              <div class="prob-bar-bg"><div class="prob-bar-fill"></div></div>
+              <span class="prob-pct">0.0%</span>
+            </li>
+            <li class="prob-row" data-digit="9">
+              <span class="prob-digit-label">9</span>
+              <div class="prob-bar-bg"><div class="prob-bar-fill"></div></div>
+              <span class="prob-pct">0.0%</span>
+            </li>
+          </ul>
+        </div>
+
+        <div id="stateError" class="panel-state hidden">
+          <div class="error-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="32" cy="32" r="30" stroke="#ef4444" stroke-width="2"/>
+              <path d="M22 22 L42 42 M42 22 L22 42" stroke="#ef4444" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h2 class="error-title">Prediction Failed</h2>
+          <p class="error-msg" id="errorMsg">Something went wrong.</p>
+          <button id="retryBtn" class="btn btn-glass">Retry</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
