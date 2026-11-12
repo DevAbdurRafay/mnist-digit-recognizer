@@ -120,7 +120,6 @@ class PredictRequest(BaseModel):
 
 
 @app.post("/api/predict")
-@app.post("/predict")
 def predict(req: PredictRequest):
     try:
         x = preprocess(req.image)
@@ -153,6 +152,6 @@ def predict(req: PredictRequest):
         "probabilities": prob_list,
     }
 
+
 PUBLIC_DIR = Path(__file__).parent.parent / "public"
-if PUBLIC_DIR.exists():
-    app.mount("/", StaticFiles(directory=PUBLIC_DIR, html=True), name="static")
+app.mount("/", StaticFiles(directory=PUBLIC_DIR, html=True), name="static")

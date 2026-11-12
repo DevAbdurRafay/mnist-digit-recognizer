@@ -4,10 +4,10 @@
     {
       "src": "api/index.py",
       "use": "@vercel/python",
-      "config": { "includeFiles": ["model/**"] }
+      "config": { "includeFiles": ["model/**", "public/**"] }
     }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/index.py" }
+    { "src": "/(.*)", "dest": "/api/index.py" }
   ]
 }
